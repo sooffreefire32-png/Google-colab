@@ -69,6 +69,11 @@ animations/
 | Finger animations | No |
 | Version | V1_01 |
 
+### Metadata labels
+
+- `metadata.csv` is the only label file and contains one row per clip.
+- Columns are: `file_name`, `clip_id`, `subject_id`, `motion_id`, `label`.
+
 ### File naming convention
 
 Each file is named `{SS}_{MM}.fbx` where:
