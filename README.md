@@ -95,28 +95,11 @@ The `.bvh` intermediate files used for this conversion were sourced from [cgspee
 
 ---
 
-## Known Limitations
-
-- Animations can be **jittery** in places. The original CMU database recommends preferring higher-numbered trials within a subject set, as they were recorded later with improved equipment.
-- Motion is **not in-place** — root motion is included and needs to be removed or handled for most game engine use cases.
-- **No finger animations** are present.
-- Some individual animations may require polishing before production use.
-
----
-
 ## Usage Notes
 
 ### Loading in Blender
 
 Use **File → Import → FBX** (not File → Open). The armature will appear as a bones-only rig.
-
-### Loading in game engines
-
-The `.fbx` files can be dragged and dropped into Unreal Engine, Unity, and Godot. Because root motion is included, additional retargeting or root-motion handling is typically required.
-
-### Removing root motion (quick tip)
-
-A fast approach to strip root motion is to delete the **location keyframes** of the root/hip bone in your animation editor, while leaving rotation keyframes intact. This is a rough approximation and will be imperfect for animations that intentionally animate vertical hip position (e.g. crouching).
 
 ---
 
