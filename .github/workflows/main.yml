@@ -12,20 +12,27 @@ jobs:
       - name: Analyze with GPT-4o
         run: |
           SCRIPT_CONTENT=$(cat script.txt)
-          RESPONSE=$(curl https://models.inference.ai.azure.com/chat/completions \
+          # Build JSON safely to avoid quote errors
+          cat <<EOF > payload.json
+          {
+            "model": "openai/gpt-4o",
+            "messages": [{"role": "user", "content": "Analyze this video script and return ONLY a valid JSON object, no markdown, no explanation: $SCRIPT_CONTENT"}]
+          }
+          EOF
+          
+          RESPONSE=$(curl -X POST https://models.inference.ai.azure.com/chat/completions \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -d "{
-              \"model\": \"openai/gpt-4o\",
-              \"messages\": [{\"role": \"user", \"content": \"Analyze this video script and return ONLY a valid JSON object, no markdown, no explanation: $SCRIPT_CONTENT\"}]
-            }")
-          echo $RESPONSE | jq '.choices[0].message.content | fromjson' > pipeline_data.json
+            -d @payload.json)
+          
+          echo "$RESPONSE" | jq -r '.choices[0].message.content' > pipeline_data.json
+          
       - name: Commit Data
         run: |
           git config --global user.name 'Pipeline Bot'
           git config --global user.email 'bot@github.com'
           git add pipeline_data.json
-          git commit -m "Update pipeline data"
+          git commit -m "Update pipeline data" || echo "No changes to commit"
           git push
 
   auto_cancel_watchdog:
@@ -34,6 +41,7 @@ jobs:
       - name: Watchdog
         run: |
           sleep 600
+          # Check if colab_pipeline.ipynb was modified or glb files created
           FILES=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/contents/)
           if [[ ! $FILES == *".glb"* ]]; then
             gh run cancel ${{ github.run_id }}
