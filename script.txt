@@ -1,18 +1,20 @@
-12 October, raat ke 11:47 baj rahe hain. Shehar ki ek aam apartment building bilkul khamosh nazar aa rahi hai. Zyada tar log so chuke hain, lekin teesri manzil ke ek apartment ke andar kuch aisa ho chuka hai jo chand hi minuto mein poore ilaqe ko hila dega.
+Write a Blender Python script that automatically creates a complete cinematic 3D crime scene documentary based on the following sequence. Delete all default objects before creating the scene. Build a realistic modern apartment with a living room, kitchen, hallway, bedroom, and bathroom using photorealistic PBR materials, realistic furniture, windows, doors, decorations, and detailed interior assets. Configure the render engine to Cycles, render output to FFmpeg MP4, and generate a smooth cinematic animation.
 
-Apartment ke andar ek mard living room ke floor par be-harkat pada hai. Coffee table toot chuki hai, sofa apni jagah se hila hua hai, chairs giri hui hain aur floor par khoon ke nishaan nazar aa rahe hain. Darwaza aadha khula hai aur kamre mein gehri khamoshi chhayi hui hai.
+Begin with a nighttime establishing shot where heavy rain falls over a quiet residential neighborhood. Create a modern apartment building surrounded by police vehicles with flashing red and blue emergency lights. Place crime scene tape around the entrance while multiple police officers secure the perimeter and forensic investigators unload equipment. Animate the camera slowly flying toward the apartment before entering through the main entrance.
 
-Kuch hi der baad ek padosi emergency services ko call karta hai. Police aur ambulance chand minuto mein mauqa-e-waqea par pohanch jati hain. Officers foran poora area secure karte hain aur kisi ko bhi apartment ke andar ya bahar jane ki ijazat nahi di jati.
+Inside the living room, create a realistic crime scene with overturned furniture, a broken coffee mug, shattered glass across the wooden floor, blood stains beside the sofa, and a television displaying static. Animate the camera moving slowly through the room while forensic photographers document every detail using realistic camera flashes.
 
-Forensic team har choti se choti detail ko document karti hai. Crime scene ki photographs li jati hain. Fingerprints collect kiye jate hain. Blood samples, shoe prints aur kamre mein bikhri hui har cheez ko evidence ke taur par seal kiya jata hai. Kitchen ke floor se khoon laga hua ek knife bhi recover hota hai.
+Create forensic investigators wearing white protective suits. Animate one investigator dusting a glass table for fingerprints, another placing numbered evidence markers beside shell casings, and another collecting blood samples with sterile swabs. Include close-up cinematic shots showing fingerprints appearing under forensic powder with realistic lighting and depth of field.
 
-Investigation ke dauran detectives apartment ke har hisse ki talashi lete hain. Bedroom mein ek gira hua mobile phone milta hai jis ki screen toot chuki hoti hai. Dining table par do coffee mugs pade hote hain, jisse andaza hota hai ke victim kisi ke saath baitha hua tha. Balcony ka sliding door halka sa khula hota hai aur us par fresh fingerprints milte hain.
+In the hallway, create a laser scanning sequence where glowing scan lines move across the apartment to generate a complete 3D reconstruction. Display holographic digital overlays illustrating bullet trajectories, impact points, and suspected movement paths while the camera follows the scanning process.
 
-Building ke CCTV footage ko check kiya jata hai. Recording mein ek shakhs hoodie pehne raat 11:18 par building mein dakhil hota hua nazar aata hai. Kuch der baad wahi shakhs jaldi mein building se nikalta hua dikhai deta hai.
+Move into the bedroom where the door is partially open and a bedside lamp flickers softly. Place a broken mobile phone on the floor, leave the wardrobe open, and create realistic muddy footprints leading toward the window. Animate investigators photographing the footprints while the camera slowly circles the room with dramatic cinematic lighting.
 
-Forensic laboratory ki reports aur CCTV evidence ko mila kar investigators suspect ki pehchan kar lete hain. Police ek planned operation ke zariye suspect ko giraftar karti hai. Arrest ke waqt us ke paas se woh kapray aur kuch aur evidence recover hota hai jo crime scene se match karta hai.
+Transition the apartment into a holographic reconstruction where semi-transparent human silhouettes recreate the suspected timeline of events. Animate a suspect entering the apartment, a confrontation occurring, and glowing movement paths illustrating each person's actions before freezing the entire reconstruction at the final critical moment.
 
-Investigation mukammal hone ke baad tamam forensic evidence, witness statements aur CCTV footage court mein pesh ki jati hai. Saboot ek doosre ki tasdeeq karte hain aur case solve ho jata hai.
+Create a forensic investigation room displaying evidence bags containing fingerprints, shell casings, DNA samples, and the damaged mobile phone on a laboratory table. Add detectives studying the reconstructed crime scene on large digital monitors. Animate the camera slowly pulling backward to reveal the entire investigation room before fading to black.
 
-This story is fictional and created for educational and entertainment purposes only.
+Display the ending text: "Every piece of evidence tells a story. Only the truth remains."
+
+Use realistic cinematic camera animation, physically accurate lighting, bright area lights, volumetric fog, rain particles, emergency vehicle lighting, ambient occlusion, bloom, motion blur, depth of field, realistic shadows, and high-quality textures throughout the animation. Set the render output to FFmpeg MP4 with a resolution of 1920×1080 at 24 FPS, and automatically calculate the total animation length to approximately 4–5 minutes by setting the appropriate end frame.
 
