@@ -1,4 +1,4 @@
-name: Render Engine v1782731764
+name: Render Engine v1782731802
 on:
   workflow_dispatch:
 jobs:
@@ -29,5 +29,5 @@ EOF
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Professional-Video
+          name: Final-Video
           path: final_3d_cartoon.mp4
