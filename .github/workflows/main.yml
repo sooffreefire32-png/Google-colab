@@ -20,6 +20,32 @@ jobs:
       - name: AI Director Logic
         run: |
           cat << 'EOF' > director.py
+
+import bpy
+# Paste your ChatGPT generated Blender code here
+bpy.ops.wm.read_factory_settings()
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete()
+
+# Example: Simple cube growing
+bpy.ops.mesh.primitive_cube_add(size=2, location=(0,0,1))
+obj = bpy.context.object
+obj.scale = (0.1, 0.1, 0.1)
+obj.keyframe_insert(data_path='scale', frame=1)
+obj.scale = (2, 2, 2)
+obj.keyframe_insert(data_path='scale', frame=100)
+
+# Standard Camera/Light
+bpy.ops.object.camera_add(location=(10, -10, 10), rotation=(0.8, 0, 0.8))
+bpy.context.scene.camera = bpy.context.object
+bpy.ops.object.light_add(type='SUN', location=(5, 5, 10))
+
+# Output Settings
+bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+bpy.context.scene.render.filepath = 'ai_movie.mp4'
+bpy.context.scene.frame_end = 100
+
           import bpy
           bpy.ops.wm.read_factory_settings()
           bpy.ops.object.select_all(action='SELECT')
