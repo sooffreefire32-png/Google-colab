@@ -23,26 +23,30 @@ jobs:
 
           prompt = os.environ.get('PROMPT', '').lower()
           
-          # --- AI DECISION LOGIC ---
-          bg_color = (0.05, 0.05, 0.05, 1) # Default Dark
-          light_color = (1, 1, 1, 1)
+          # --- AI DECISION LOGIC (Background & Lighting) ---
+          bg_color = (0.05, 0.05, 0.05, 1) # Default: Dark Gray/Black
+          light_color = (1, 1, 1, 1)        # Default: White
           
-          # Background Analysis
+          # Background Keyword Analysis
           if 'purana ghar' in prompt or 'old house' in prompt:
-              bg_color = (0.1, 0.05, 0.02, 1) # Brownish
+              bg_color = (0.1, 0.05, 0.02, 1) # Brownish/Old Wood look
           elif 'forest' in prompt or 'jungle' in prompt:
-              bg_color = (0.02, 0.1, 0.02, 1) # Greenish
+              bg_color = (0.01, 0.08, 0.01, 1) # Deep Green
+          elif 'space' in prompt or 'asman' in prompt:
+              bg_color = (0, 0, 0.05, 1)       # Dark Blue Space
           
-          # Lighting Analysis
+          # Lighting Keyword Analysis
           if 'neeli roshni' in prompt or 'blue' in prompt:
               light_color = (0, 0.5, 1, 1)
+          elif 'shuh' in prompt or 'red' in prompt:
+              light_color = (1, 0, 0, 1)
 
           # Setup Scene
           bpy.ops.wm.read_factory_settings()
           bpy.ops.object.select_all(action='SELECT')
           bpy.ops.object.delete()
 
-          # Set Background Color
+          # Set Background
           bpy.context.scene.world.use_nodes = True
           bg_node = bpy.context.scene.world.node_tree.nodes['Background']
           bg_node.inputs[0].default_value = bg_color
@@ -50,19 +54,19 @@ jobs:
           # Create Character
           bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
           
-          # Lighting
+          # Add Light based on AI Analysis
           bpy.ops.object.light_add(type='POINT', location=(3, 3, 5))
           bpy.context.object.data.color = light_color[:3]
-          bpy.context.object.data.energy = 1000
+          bpy.context.object.data.energy = 2000
 
-          # Camera
+          # Smart Camera Placement
           bpy.ops.object.camera_add(location=(5, -5, 4), rotation=(1.1, 0, 0.8))
           bpy.context.scene.camera = bpy.context.object
 
-          # Render
+          # Render Output
           bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
           bpy.context.scene.render.filepath = 'ai_story_video.mp4'
-          bpy.context.scene.frame_end = 50
+          bpy.context.scene.frame_end = 60
           bpy.ops.render.render(animation=True)
           EOF
           blender -b -P director.py
