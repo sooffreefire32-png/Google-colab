@@ -24,36 +24,45 @@ jobs:
           prompt = os.environ.get('PROMPT', '').lower()
           
           # --- AI DECISION LOGIC ---
-          # Default settings
-          light_color = (1, 1, 1, 1) # White
-          cam_pos = (7, -7, 5)
+          bg_color = (0.05, 0.05, 0.05, 1) # Default Dark
+          light_color = (1, 1, 1, 1)
           
-          if 'neeli roshni' in prompt or 'blue light' in prompt:
-              light_color = (0, 0, 1, 1)
+          # Background Analysis
+          if 'purana ghar' in prompt or 'old house' in prompt:
+              bg_color = (0.1, 0.05, 0.02, 1) # Brownish
+          elif 'forest' in prompt or 'jungle' in prompt:
+              bg_color = (0.02, 0.1, 0.02, 1) # Greenish
           
-          if 'close-up' in prompt or 'khirki' in prompt:
-              cam_pos = (3, -3, 2)
+          # Lighting Analysis
+          if 'neeli roshni' in prompt or 'blue' in prompt:
+              light_color = (0, 0.5, 1, 1)
 
           # Setup Scene
           bpy.ops.wm.read_factory_settings()
           bpy.ops.object.select_all(action='SELECT')
           bpy.ops.object.delete()
 
+          # Set Background Color
+          bpy.context.scene.world.use_nodes = True
+          bg_node = bpy.context.scene.world.node_tree.nodes['Background']
+          bg_node.inputs[0].default_value = bg_color
+
           # Create Character
           bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
           
-          # Apply Smart Lighting
-          bpy.ops.object.light_add(type='AREA', location=(5, -5, 10))
+          # Lighting
+          bpy.ops.object.light_add(type='POINT', location=(3, 3, 5))
           bpy.context.object.data.color = light_color[:3]
-          bpy.context.object.data.energy = 5000
+          bpy.context.object.data.energy = 1000
 
-          # Apply Smart Camera
-          bpy.ops.object.camera_add(location=cam_pos, rotation=(1.1, 0, 0.8))
+          # Camera
+          bpy.ops.object.camera_add(location=(5, -5, 4), rotation=(1.1, 0, 0.8))
           bpy.context.scene.camera = bpy.context.object
 
           # Render
           bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
           bpy.context.scene.render.filepath = 'ai_story_video.mp4'
+          bpy.context.scene.frame_end = 50
           bpy.ops.render.render(animation=True)
           EOF
           blender -b -P director.py
