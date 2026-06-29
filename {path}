@@ -1,7 +1,6 @@
-name: Long Professional 3D Render
+name: Render Engine v1782731764
 on:
   workflow_dispatch:
-
 jobs:
   render:
     runs-on: ubuntu-latest
@@ -18,13 +17,9 @@ import bpy
 bpy.ops.wm.read_factory_settings()
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete()
-
-# Professional settings (7200 frames)
 bpy.context.scene.frame_start = 1
 bpy.context.scene.frame_end = 7200
-
 bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
-
 bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
 bpy.context.scene.render.ffmpeg.format = 'MPEG4'
 bpy.context.scene.render.ffmpeg.codec = 'H264'
@@ -34,5 +29,5 @@ EOF
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Professional-Cartoon-Video
+          name: Professional-Video
           path: final_3d_cartoon.mp4
