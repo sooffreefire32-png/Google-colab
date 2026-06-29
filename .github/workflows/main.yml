@@ -1,28 +1,79 @@
-name: Custom Script Render
+name: 3D AI Director Pipeline
 on:
   workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Describe the scene or provide your story script'
+        required: true
+        default: 'Metallic monkey in a red neon room'
+
 jobs:
-  render:
+  direct_and_render:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup
-        run: sudo apt-get update && sudo apt-get install -y blender ffmpeg libegl1 libgles2
-      - name: Run
+      - name: Setup Graphics & Blender
         run: |
-          cat << 'EOF' > custom_logic.py
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg libegl1 libgles2
+      - name: AI Director Logic
+        run: |
+          # Access the prompt input from GitHub Actions environment variable
+          PROMPT="${{ github.event.inputs.prompt }}"
+          echo "Received prompt in workflow: $PROMPT" # For debugging workflow runs
 
-import bpy
-# Yahan apni Blender Python script paste karein...
-bpy.ops.wm.read_factory_settings()
-bpy.ops.mesh.primitive_monkey_add(location=(0,0,0))
-# Camera aur Render settings lazmi check karein
+          cat << 'EOF' > director.py
+          import bpy
+          import os
 
-EOF
-          blender -b -P custom_logic.py
-      - name: Upload
+          # Retrieve the prompt passed from GitHub Actions
+          prompt_text = os.environ.get('PROMPT', 'No prompt provided')
+          print(f"Blender script received prompt: {prompt_text}")
+
+          # === YOUR BLENDER SCRIPT LOGIC STARTS HERE ===
+          # You would need to add logic here to parse `prompt_text`
+          # and generate your 3D scene based on the story script.
+          # For now, it just prints the prompt and creates a basic monkey.
+
+          bpy.ops.wm.read_factory_settings()
+          bpy.ops.object.select_all(action='SELECT')
+          bpy.ops.object.delete()
+
+          # World/Background Setup
+          bpy.context.scene.world.use_nodes = True
+          bg = bpy.context.scene.world.node_tree.nodes['Background']
+          bg.inputs[0].default_value = (0.01, 0.01, 0.02, 1) # Dark cinematic background
+
+          # Model & Coloring
+          bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
+          monkey = bpy.context.object
+          mat = bpy.data.materials.new(name="AI_Mat")
+          mat.use_nodes = True
+          nodes = mat.node_tree.nodes
+          bsdf = nodes.get("Principled BSDF")
+          bsdf.inputs['Base Color'].default_value = (1.0, 0.05, 0.05, 1) # Bright Red
+          bsdf.inputs['Metallic'].default_value = 1.0
+          monkey.data.materials.append(mat)
+
+          # Lighting
+          bpy.ops.object.light_add(type='AREA', location=(5, -5, 10))
+          bpy.context.object.data.energy = 2000
+
+          # Camera
+          bpy.ops.object.camera_add(location=(7, -7, 5), rotation=(1.1, 0, 0.8))
+          bpy.context.scene.camera = bpy.context.object
+
+          # Render Settings
+          bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+          bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+          bpy.context.scene.render.filepath = 'ai_movie.mp4'
+          bpy.context.scene.frame_end = 100
+          bpy.ops.render.render(animation=True)
+          EOF
+          blender -b -P director.py
+      - name: Upload Movie
         uses: actions/upload-artifact@v4
         with:
-          name: Custom-Render-Output
-          path: '*.mp4'
+          name: Finished-Animation
+          path: ai_movie.mp4
