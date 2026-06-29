@@ -21,7 +21,7 @@ jobs:
             export PROMPT=$(cat script.txt)
             echo "Using script.txt content"
           else
-            export PROMPT="${{ github.event.inputs.prompt }}"
+            export PROMPT="{{ github.event.inputs.prompt }}"
             echo "Using manual input prompt"
           fi
 
