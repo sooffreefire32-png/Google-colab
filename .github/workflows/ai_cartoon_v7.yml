@@ -1,0 +1,43 @@
+name: AI Cartoon Pipeline V7
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Story prompt'
+        default: 'Monkey in park'
+        required: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Blender
+        run: sudo apt-get update && sudo apt-get install -y blender ffmpeg libegl1 libgles2
+      - name: Run Script
+        run: |
+          export PROMPT="${{ github.event.inputs.prompt }}"
+          cat << 'EOF' > director.py
+import bpy, os, math
+prompt = os.environ.get('PROMPT', '').lower()
+bpy.ops.wm.read_factory_settings()
+bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
+monkey = bpy.context.object
+for f in range(1, 61):
+    bpy.context.scene.frame_set(f)
+    monkey.location.z = 1 + abs(math.sin(f*0.2))
+    monkey.keyframe_insert(data_path='location', index=2)
+bpy.ops.object.camera_add(location=(10,-10,5), rotation=(1.1,0,0.8))
+bpy.context.scene.camera = bpy.context.object
+bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+bpy.context.scene.render.filepath = 'cartoon.mp4'
+bpy.context.scene.frame_end = 60
+bpy.ops.render.render(animation=True)
+EOF
+          blender -b -P director.py
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: CartoonVideo
+          path: cartoon.mp4
