@@ -1,40 +1,26 @@
 name: 3D Animation Pipeline
-
 on:
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   analyze_script:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Analyze with GPT-4o
+      - name: Analyze
         run: |
-          # Read script content carefully
           SCRIPT_CONTENT=$(cat script.txt | tr -d '\n' | tr -d '\r')
-          
-          # Create payload for Azure/OpenAI
-          echo '{"model": "openai/gpt-4o", "messages": [{"role": "user", "content": "Analyze this script and return ONLY a JSON object with a list of models: '"$SCRIPT_CONTENT"'"}]}' > payload.json
-
-          RESPONSE=$(curl -X POST https://models.inference.ai.azure.com/chat/completions             -H "Content-Type: application/json"             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}"             -d @payload.json)
-
-          # Extract content and ensure it is valid JSON before saving
+          echo "{\"model\": \"openai/gpt-4o\", \"messages\": [{\"role\": \"user\", \"content\": \"Analyze this script and return ONLY a JSON object with a key 'models' containing a list of assets: $SCRIPT_CONTENT\"}]}" > payload.json
+          RESPONSE=$(curl -X POST https://models.inference.ai.azure.com/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" -d @payload.json)
+          # Robust JSON cleaning
           echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/```json//g' | sed 's/```//g' > pipeline_data.json
-
-      - name: Commit and Push
+      - name: Commit
         run: |
           git config --global user.name 'Pipeline Bot'
           git config --global user.email 'bot@github.com'
           git add pipeline_data.json
-          # Force a change or check status
-          if git diff --staged --quiet; then
-            echo "No changes detected in pipeline_data.json"
-          else
-            git commit -m "Update pipeline data [skip ci]"
-            git push
-          fi
+          # Commit even if formatting just changed slightly
+          git commit -m "Update pipeline data $(date +%Y-%m-%d:%H:%M:%S) [skip ci]" || echo "No changes"
+          git push
