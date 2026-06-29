@@ -4,23 +4,21 @@ on:
 permissions:
   contents: write
 jobs:
-  analyze_script:
+  build_3d:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Analyze
+      - name: Install Blender
+        run: sudo apt-get update && sudo apt-get install -y blender
+      - name: Generate 3D Model
         run: |
-          SCRIPT_CONTENT=$(cat script.txt | tr -d '\n' | tr -d '\r')
-          echo "{\"model\": \"openai/gpt-4o\", \"messages\": [{\"role\": \"user\", \"content\": \"Analyze this script and return ONLY a JSON object with a key 'models' containing a list of assets: $SCRIPT_CONTENT\"}]}" > payload.json
-          RESPONSE=$(curl -X POST https://models.inference.ai.azure.com/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" -d @payload.json)
-          # Robust JSON cleaning
-          echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/```json//g' | sed 's/```//g' > pipeline_data.json
-      - name: Commit
+          echo "import bpy; bpy.ops.wm.read_factory_settings(); bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(); bpy.ops.mesh.primitive_monkey_add(location=(0,0,0)); bpy.ops.export_scene.gltf(filepath='monkey_animation.glb')" > gen.py
+          blender -b -P gen.py
+      - name: Commit Results
         run: |
           git config --global user.name 'Pipeline Bot'
           git config --global user.email 'bot@github.com'
-          git add pipeline_data.json
-          # Commit even if formatting just changed slightly
-          git commit -m "Update pipeline data $(date +%Y-%m-%d:%H:%M:%S) [skip ci]" || echo "No changes"
+          git add monkey_animation.glb
+          git commit -m "Add generated 3D model" || echo "No changes"
           git push
