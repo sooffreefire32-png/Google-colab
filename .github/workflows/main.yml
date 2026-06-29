@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       prompt:
-        description: 'Story Script (Optional if script.txt exists)'
-        default: 'Monkey in a room'
+        description: 'Story Script'
+        default: 'Monkey walking in a dark forest with red lights'
 
 jobs:
   direct_and_render:
@@ -16,13 +16,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y blender
       - name: AI Smart Logic
         run: |
-          # Check if script.txt exists, otherwise use prompt input
           if [ -f "script.txt" ]; then
             export PROMPT=$(cat script.txt)
-            echo "Reading story from script.txt"
           else
             export PROMPT="${{ github.event.inputs.prompt }}"
-            echo "Reading story from Prompt input"
           fi
 
           cat << 'EOF' > director.py
@@ -31,41 +28,52 @@ jobs:
 
           prompt = os.environ.get('PROMPT', '').lower()
           
-          # --- AI DECISION LOGIC ---
-          bg_color = (0.05, 0.05, 0.05, 1)
-          light_color = (1, 1, 1, 1)
-          
-          if 'purana ghar' in prompt or 'old house' in prompt:
-              bg_color = (0.1, 0.05, 0.02, 1)
-          elif 'forest' in prompt or 'jungle' in prompt:
-              bg_color = (0.01, 0.08, 0.01, 1)
-          
-          if 'blue' in prompt or 'neeli' in prompt:
-              light_color = (0, 0.5, 1, 1)
+          def setup_environment(prompt):
+              bg_color = (0.05, 0.05, 0.05, 1)
+              light_color = (1, 1, 1, 1)
+              
+              if 'forest' in prompt or 'jungle' in prompt:
+                  bg_color = (0.01, 0.08, 0.01, 1)
+              elif 'house' in prompt or 'room' in prompt:
+                  bg_color = (0.1, 0.05, 0.02, 1)
 
-          # Setup & Render
+              if 'red' in prompt:
+                  light_color = (1, 0, 0, 1)
+              elif 'blue' in prompt:
+                  light_color = (0, 0.5, 1, 1)
+              
+              bpy.context.scene.world.use_nodes = True
+              bpy.context.scene.world.node_tree.nodes['Background'].inputs[0].default_value = bg_color
+              return light_color
+
+          # --- MAIN BLENDER EXECUTION ---
           bpy.ops.wm.read_factory_settings()
           bpy.ops.object.select_all(action='SELECT')
           bpy.ops.object.delete()
 
-          bpy.context.scene.world.use_nodes = True
-          bpy.context.scene.world.node_tree.nodes['Background'].inputs[0].default_value = bg_color
-
-          bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
-          bpy.ops.object.light_add(type='POINT', location=(3, 3, 5))
-          bpy.context.object.data.color = light_color[:3]
+          l_color = setup_environment(prompt)
           
-          bpy.ops.object.camera_add(location=(5, -5, 4), rotation=(1.1, 0, 0.8))
+          # Character Creation
+          bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
+          character = bpy.context.object
+          
+          # Lighting
+          bpy.ops.object.light_add(type='POINT', location=(3, 3, 5))
+          bpy.context.object.data.color = l_color[:3]
+          
+          # Camera Setup
+          bpy.ops.object.camera_add(location=(7, -7, 5), rotation=(1.1, 0, 0.8))
           bpy.context.scene.camera = bpy.context.object
 
+          # Render Configuration
           bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
           bpy.context.scene.render.filepath = 'ai_story_video.mp4'
-          bpy.context.scene.frame_end = 60
+          bpy.context.scene.frame_end = 90
           bpy.ops.render.render(animation=True)
           EOF
           blender -b -P director.py
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Story-Based-Cartoon
+          name: AI-Director-Movie
           path: ai_story_video.mp4
