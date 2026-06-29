@@ -1,4 +1,4 @@
-name: 3D Animation Engine 1782719580
+name: 3D Animation Engine 1782719599
 on:
   workflow_dispatch:
 permissions:
@@ -17,7 +17,6 @@ jobs:
         run: |
           cat << 'EOF' > animate.py
           import bpy
-          # Clear scene
           bpy.ops.wm.read_factory_settings()
           bpy.ops.object.select_all(action='SELECT')
           bpy.ops.object.delete()
@@ -26,11 +25,11 @@ jobs:
           bpy.ops.mesh.primitive_monkey_add(location=(0,0,0))
           monkey = bpy.context.object
           
-          # Add Camera
+          # Add Camera (Fixes the 'No camera' error)
           bpy.ops.object.camera_add(location=(0, -5, 2), rotation=(1.2, 0, 0))
           bpy.context.scene.camera = bpy.context.object
           
-          # Add Light (so it's not pitch black)
+          # Add Light
           bpy.ops.object.light_add(type='SUN', location=(5, 5, 10))
           
           # Animate Monkey
@@ -44,8 +43,6 @@ jobs:
           bpy.context.scene.render.ffmpeg.format = 'MPEG4'
           bpy.context.scene.render.filepath = '${{ github.workspace }}/final_animation.mp4'
           bpy.context.scene.frame_end = 60
-          
-          # Render Animation
           bpy.ops.render.render(animation=True)
           EOF
           blender -b -P animate.py
