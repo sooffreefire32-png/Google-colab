@@ -3,7 +3,6 @@ name: 3D Animation Pipeline
 on:
   workflow_dispatch:
 
-# Added explicit write permissions for the bot to push files
 permissions:
   contents: write
 
@@ -13,39 +12,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Analyze with GPT-4o
         run: |
-          SCRIPT_CONTENT=$(cat script.txt)
-          cat <<EOF > payload.json
-          {
-            "model": "openai/gpt-4o",
-            "messages": [{"role": "user", "content": "Analyze this video script and return ONLY a valid JSON object, no markdown, no explanation: $SCRIPT_CONTENT"}]
-          }
-          EOF
+          # Read script content carefully
+          SCRIPT_CONTENT=$(cat script.txt | tr -d '\n' | tr -d '\r')
+          
+          # Create payload for Azure/OpenAI
+          echo '{"model": "openai/gpt-4o", "messages": [{"role": "user", "content": "Analyze this script and return ONLY a JSON object with a list of models: '"$SCRIPT_CONTENT"'"}]}' > payload.json
 
-          RESPONSE=$(curl -X POST https://models.inference.ai.azure.com/chat/completions \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -d @payload.json)
+          RESPONSE=$(curl -X POST https://models.inference.ai.azure.com/chat/completions             -H "Content-Type: application/json"             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}"             -d @payload.json)
 
-          echo "$RESPONSE" | jq -r '.choices[0].message.content' > pipeline_data.json
+          # Extract content and ensure it is valid JSON before saving
+          echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/```json//g' | sed 's/```//g' > pipeline_data.json
 
-      - name: Commit Data
+      - name: Commit and Push
         run: |
           git config --global user.name 'Pipeline Bot'
           git config --global user.email 'bot@github.com'
           git add pipeline_data.json
-          git commit -m "Update pipeline data" || echo "No changes to commit"
-          git push
-
-  auto_cancel_watchdog:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Watchdog
-        run: |
-          sleep 600
-          FILES=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/contents/)
-          if [[ ! $FILES == *".glb"* ]]; then
-            gh run cancel ${{ github.run_id }}
-            echo "Colab not started - Cancelled"
+          # Force a change or check status
+          if git diff --staged --quiet; then
+            echo "No changes detected in pipeline_data.json"
+          else
+            git commit -m "Update pipeline data [skip ci]"
+            git push
           fi
