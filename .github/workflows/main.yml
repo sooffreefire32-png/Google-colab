@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       prompt:
-        description: 'Story Script'
-        required: true
+        description: 'Story Script (Optional if script.txt exists)'
+        default: 'Monkey in a room'
 
 jobs:
   direct_and_render:
@@ -16,54 +16,48 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y blender
       - name: AI Smart Logic
         run: |
-          export PROMPT="${{ github.event.inputs.prompt }}"
+          # Check if script.txt exists, otherwise use prompt input
+          if [ -f "script.txt" ]; then
+            export PROMPT=$(cat script.txt)
+            echo "Reading story from script.txt"
+          else
+            export PROMPT="${{ github.event.inputs.prompt }}"
+            echo "Reading story from Prompt input"
+          fi
+
           cat << 'EOF' > director.py
           import bpy
           import os
 
           prompt = os.environ.get('PROMPT', '').lower()
           
-          # --- AI DECISION LOGIC (Background & Lighting) ---
-          bg_color = (0.05, 0.05, 0.05, 1) # Default: Dark Gray/Black
-          light_color = (1, 1, 1, 1)        # Default: White
+          # --- AI DECISION LOGIC ---
+          bg_color = (0.05, 0.05, 0.05, 1)
+          light_color = (1, 1, 1, 1)
           
-          # Background Keyword Analysis
           if 'purana ghar' in prompt or 'old house' in prompt:
-              bg_color = (0.1, 0.05, 0.02, 1) # Brownish/Old Wood look
+              bg_color = (0.1, 0.05, 0.02, 1)
           elif 'forest' in prompt or 'jungle' in prompt:
-              bg_color = (0.01, 0.08, 0.01, 1) # Deep Green
-          elif 'space' in prompt or 'asman' in prompt:
-              bg_color = (0, 0, 0.05, 1)       # Dark Blue Space
+              bg_color = (0.01, 0.08, 0.01, 1)
           
-          # Lighting Keyword Analysis
-          if 'neeli roshni' in prompt or 'blue' in prompt:
+          if 'blue' in prompt or 'neeli' in prompt:
               light_color = (0, 0.5, 1, 1)
-          elif 'shuh' in prompt or 'red' in prompt:
-              light_color = (1, 0, 0, 1)
 
-          # Setup Scene
+          # Setup & Render
           bpy.ops.wm.read_factory_settings()
           bpy.ops.object.select_all(action='SELECT')
           bpy.ops.object.delete()
 
-          # Set Background
           bpy.context.scene.world.use_nodes = True
-          bg_node = bpy.context.scene.world.node_tree.nodes['Background']
-          bg_node.inputs[0].default_value = bg_color
+          bpy.context.scene.world.node_tree.nodes['Background'].inputs[0].default_value = bg_color
 
-          # Create Character
           bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
-          
-          # Add Light based on AI Analysis
           bpy.ops.object.light_add(type='POINT', location=(3, 3, 5))
           bpy.context.object.data.color = light_color[:3]
-          bpy.context.object.data.energy = 2000
-
-          # Smart Camera Placement
+          
           bpy.ops.object.camera_add(location=(5, -5, 4), rotation=(1.1, 0, 0.8))
           bpy.context.scene.camera = bpy.context.object
 
-          # Render Output
           bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
           bpy.context.scene.render.filepath = 'ai_story_video.mp4'
           bpy.context.scene.frame_end = 60
