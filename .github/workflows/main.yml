@@ -1,4 +1,4 @@
-name: 3D Animation Engine 1782719030
+name: 3D Animation Engine 1782719404
 on:
   workflow_dispatch:
 permissions:
@@ -15,21 +15,23 @@ jobs:
           sudo apt-get install -y blender ffmpeg
       - name: Execute Animation Script
         run: |
-          echo "import bpy
-bpy.ops.wm.read_factory_settings()
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete()
-bpy.ops.mesh.primitive_monkey_add(location=(0,0,0))
-obj = bpy.context.object
-obj.rotation_euler[2] = 0
-obj.keyframe_insert(data_path='rotation_euler', frame=1)
-obj.rotation_euler[2] = 6.28
-obj.keyframe_insert(data_path='rotation_euler', frame=60)
-bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
-bpy.context.scene.render.ffmpeg.format = 'MPEG4'
-bpy.context.scene.render.filepath = '${{ github.workspace }}/final_animation.mp4'
-bpy.context.scene.frame_end = 60
-bpy.ops.render.render(animation=True)" > animate.py
+          cat << 'EOF' > animate.py
+          import bpy
+          bpy.ops.wm.read_factory_settings()
+          bpy.ops.object.select_all(action='SELECT')
+          bpy.ops.object.delete()
+          bpy.ops.mesh.primitive_monkey_add(location=(0,0,0))
+          obj = bpy.context.object
+          obj.rotation_euler[2] = 0
+          obj.keyframe_insert(data_path='rotation_euler', frame=1)
+          obj.rotation_euler[2] = 6.28
+          obj.keyframe_insert(data_path='rotation_euler', frame=60)
+          bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+          bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+          bpy.context.scene.render.filepath = '${{ github.workspace }}/final_animation.mp4'
+          bpy.context.scene.frame_end = 60
+          bpy.ops.render.render(animation=True)
+          EOF
           blender -b -P animate.py
       - name: Upload Video
         uses: actions/upload-artifact@v4
