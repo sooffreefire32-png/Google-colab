@@ -1,4 +1,4 @@
-name: 3D Animation Engine 1782719599
+name: 3D Animation Engine 1782719794
 on:
   workflow_dispatch:
 permissions:
@@ -9,10 +9,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Blender & FFmpeg
+      - name: Setup Blender & Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender ffmpeg
+          sudo apt-get install -y blender ffmpeg libegl1 libgles2 libdbus-1-3
       - name: Execute Animation Script
         run: |
           cat << 'EOF' > animate.py
@@ -25,7 +25,7 @@ jobs:
           bpy.ops.mesh.primitive_monkey_add(location=(0,0,0))
           monkey = bpy.context.object
           
-          # Add Camera (Fixes the 'No camera' error)
+          # Add Camera
           bpy.ops.object.camera_add(location=(0, -5, 2), rotation=(1.2, 0, 0))
           bpy.context.scene.camera = bpy.context.object
           
