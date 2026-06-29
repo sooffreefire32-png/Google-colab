@@ -1,4 +1,4 @@
-name: Render Engine
+name: Render Engine Fixed
 on:
   workflow_dispatch:
 jobs:
@@ -11,19 +11,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y blender ffmpeg libegl1 libgles2
       - name: Run
         run: |
-          echo 'import bpy
-bpy.ops.wm.read_factory_settings()
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete()
-bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
-bpy.context.scene.frame_start = 1
-bpy.context.scene.frame_end = 7200
-bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
-bpy.context.scene.render.ffmpeg.format = 'MPEG4'
-bpy.context.scene.render.filepath = 'final_video.mp4'' > director.py
-          blender -b -P director.py -a
+          echo "import bpy; bpy.ops.wm.read_factory_settings(); bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(); bpy.ops.mesh.primitive_monkey_add(location=(0,0,0)); bpy.ops.object.camera_add(location=(0,-5,2), rotation=(1.2,0,0)); bpy.context.scene.camera = bpy.context.object; bpy.context.scene.frame_start = 1; bpy.context.scene.frame_end = 250; bpy.context.scene.render.image_settings.file_format = 'FFMPEG'; bpy.context.scene.render.ffmpeg.format = 'MPEG4'; bpy.context.scene.render.filepath = 'final_video.mp4'; bpy.ops.render.render(animation=True)" > director.py
+          blender -b -P director.py
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Rendered-Video
+          name: Fixed-Video
           path: final_video.mp4
