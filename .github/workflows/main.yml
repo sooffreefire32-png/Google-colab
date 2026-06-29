@@ -1,24 +1,49 @@
-name: 3D Animation Pipeline
+name: 3D Full Animation & Video
 on:
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  build_3d:
+  render_3d_video:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install Blender
-        run: sudo apt-get update && sudo apt-get install -y blender
-      - name: Generate 3D Model
+      - name: Setup Blender & FFmpeg
         run: |
-          echo "import bpy; bpy.ops.wm.read_factory_settings(); bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(); bpy.ops.mesh.primitive_monkey_add(location=(0,0,0)); bpy.ops.export_scene.gltf(filepath='monkey_animation.glb')" > gen.py
-          blender -b -P gen.py
-      - name: Commit Results
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg
+      - name: Execute Animation Script
         run: |
-          git config --global user.name 'Pipeline Bot'
+          echo "import bpy
+bpy.ops.wm.read_factory_settings()
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete()
+# Adding a character
+bpy.ops.mesh.primitive_monkey_add(location=(0,0,0))
+obj = bpy.context.object
+# Add basic rotation animation
+obj.rotation_euler[2] = 0
+obj.keyframe_insert(data_path='rotation_euler', frame=1)
+obj.rotation_euler[2] = 6.28 # Full 360 turn
+obj.keyframe_insert(data_path='rotation_euler', frame=60)
+# Set output video settings
+bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+bpy.context.scene.render.filepath = '${{ github.workspace }}/final_animation.mp4'
+bpy.context.scene.frame_end = 60
+# Render Animation
+bpy.ops.render.render(animation=True)" > animate.py
+          blender -b -P animate.py
+      - name: Upload Video Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Final-3D-Video
+          path: final_animation.mp4
+      - name: Commit GLB to Repo
+        run: |
+          git config --global user.name '3D-Bot'
           git config --global user.email 'bot@github.com'
-          git add monkey_animation.glb
-          git commit -m "Add generated 3D model" || echo "No changes"
+          git add *.mp4 || true
+          git commit -m "Add final rendered video" || echo "No changes"
           git push
