@@ -1,90 +1,41 @@
-name: 3D AI Director Pipeline
+name: Long Professional 3D Render
 on:
   workflow_dispatch:
-    inputs:
-      prompt:
-        description: 'Describe the scene'
-        required: true
-        default: 'Metallic monkey in a red neon room'
-
 jobs:
-  direct_and_render:
+  render:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Graphics & Blender
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y blender ffmpeg libegl1 libgles2
-      - name: AI Director Logic
+      - name: Setup
+        run: sudo apt-get update && sudo apt-get install -y blender ffmpeg libegl1 libgles2
+      - name: Render
         run: |
           cat << 'EOF' > director.py
 
 import bpy
-# Paste your ChatGPT generated Blender code here
 bpy.ops.wm.read_factory_settings()
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete()
 
-# Example: Simple cube growing
-bpy.ops.mesh.primitive_cube_add(size=2, location=(0,0,1))
-obj = bpy.context.object
-obj.scale = (0.1, 0.1, 0.1)
-obj.keyframe_insert(data_path='scale', frame=1)
-obj.scale = (2, 2, 2)
-obj.keyframe_insert(data_path='scale', frame=100)
+# Professional settings for 5 minutes (7200 frames at 24fps)
+bpy.context.scene.frame_start = 1
+bpy.context.scene.frame_end = 7200
 
-# Standard Camera/Light
-bpy.ops.object.camera_add(location=(10, -10, 10), rotation=(0.8, 0, 0.8))
-bpy.context.scene.camera = bpy.context.object
-bpy.ops.object.light_add(type='SUN', location=(5, 5, 10))
+# Scene creation logic goes here...
+bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
 
-# Output Settings
+# High-Quality Render Settings
 bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
 bpy.context.scene.render.ffmpeg.format = 'MPEG4'
-bpy.context.scene.render.filepath = 'ai_movie.mp4'
-bpy.context.scene.frame_end = 100
+bpy.context.scene.render.ffmpeg.codec = 'H264'
+bpy.context.scene.render.filepath = 'final_3d_cartoon.mp4'
 
-          import bpy
-          bpy.ops.wm.read_factory_settings()
-          bpy.ops.object.select_all(action='SELECT')
-          bpy.ops.object.delete()
-
-          # World/Background Setup
-          bpy.context.scene.world.use_nodes = True
-          bg = bpy.context.scene.world.node_tree.nodes['Background']
-          bg.inputs[0].default_value = (0.01, 0.01, 0.02, 1) # Dark cinematic background
-
-          # Model & Coloring
-          bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
-          monkey = bpy.context.object
-          mat = bpy.data.materials.new(name="AI_Mat")
-          mat.use_nodes = True
-          nodes = mat.node_tree.nodes
-          bsdf = nodes.get("Principled BSDF")
-          bsdf.inputs['Base Color'].default_value = (1.0, 0.05, 0.05, 1) # Bright Red
-          bsdf.inputs['Metallic'].default_value = 1.0
-          monkey.data.materials.append(mat)
-
-          # Lighting
-          bpy.ops.object.light_add(type='AREA', location=(5, -5, 10))
-          bpy.context.object.data.energy = 2000
-
-          # Camera
-          bpy.ops.object.camera_add(location=(7, -7, 5), rotation=(1.1, 0, 0.8))
-          bpy.context.scene.camera = bpy.context.object
-
-          # Render Settings
-          bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
-          bpy.context.scene.render.ffmpeg.format = 'MPEG4'
-          bpy.context.scene.render.filepath = 'ai_movie.mp4'
-          bpy.context.scene.frame_end = 100
-          bpy.ops.render.render(animation=True)
-          EOF
-          blender -b -P director.py
-      - name: Upload Movie
+EOF
+          blender -b -P director.py -a
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Finished-Animation
-          path: ai_movie.mp4
+          name: Professional-Cartoon-Video
+          path: final_3d_cartoon.mp4
