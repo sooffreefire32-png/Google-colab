@@ -3,9 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       prompt:
-        description: 'Describe the scene or provide your story script'
+        description: 'Story Script'
         required: true
-        default: 'Metallic monkey in a red neon room'
 
 jobs:
   direct_and_render:
@@ -13,67 +12,53 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Graphics & Blender
+      - name: Setup
+        run: sudo apt-get update && sudo apt-get install -y blender
+      - name: AI Smart Logic
         run: |
-          sudo apt-get update
-          sudo apt-get install -y blender ffmpeg libegl1 libgles2
-      - name: AI Director Logic
-        run: |
-          # Access the prompt input from GitHub Actions environment variable
-          PROMPT="${{ github.event.inputs.prompt }}"
-          echo "Received prompt in workflow: $PROMPT" # For debugging workflow runs
-
+          export PROMPT="${{ github.event.inputs.prompt }}"
           cat << 'EOF' > director.py
           import bpy
           import os
 
-          # Retrieve the prompt passed from GitHub Actions
-          prompt_text = os.environ.get('PROMPT', 'No prompt provided')
-          print(f"Blender script received prompt: {prompt_text}")
+          prompt = os.environ.get('PROMPT', '').lower()
+          
+          # --- AI DECISION LOGIC ---
+          # Default settings
+          light_color = (1, 1, 1, 1) # White
+          cam_pos = (7, -7, 5)
+          
+          if 'neeli roshni' in prompt or 'blue light' in prompt:
+              light_color = (0, 0, 1, 1)
+          
+          if 'close-up' in prompt or 'khirki' in prompt:
+              cam_pos = (3, -3, 2)
 
-          # === YOUR BLENDER SCRIPT LOGIC STARTS HERE ===
-          # You would need to add logic here to parse `prompt_text`
-          # and generate your 3D scene based on the story script.
-          # For now, it just prints the prompt and creates a basic monkey.
-
+          # Setup Scene
           bpy.ops.wm.read_factory_settings()
           bpy.ops.object.select_all(action='SELECT')
           bpy.ops.object.delete()
 
-          # World/Background Setup
-          bpy.context.scene.world.use_nodes = True
-          bg = bpy.context.scene.world.node_tree.nodes['Background']
-          bg.inputs[0].default_value = (0.01, 0.01, 0.02, 1) # Dark cinematic background
-
-          # Model & Coloring
+          # Create Character
           bpy.ops.mesh.primitive_monkey_add(location=(0,0,1))
-          monkey = bpy.context.object
-          mat = bpy.data.materials.new(name="AI_Mat")
-          mat.use_nodes = True
-          nodes = mat.node_tree.nodes
-          bsdf = nodes.get("Principled BSDF")
-          bsdf.inputs['Base Color'].default_value = (1.0, 0.05, 0.05, 1) # Bright Red
-          bsdf.inputs['Metallic'].default_value = 1.0
-          monkey.data.materials.append(mat)
-
-          # Lighting
+          
+          # Apply Smart Lighting
           bpy.ops.object.light_add(type='AREA', location=(5, -5, 10))
-          bpy.context.object.data.energy = 2000
+          bpy.context.object.data.color = light_color[:3]
+          bpy.context.object.data.energy = 5000
 
-          # Camera
-          bpy.ops.object.camera_add(location=(7, -7, 5), rotation=(1.1, 0, 0.8))
+          # Apply Smart Camera
+          bpy.ops.object.camera_add(location=cam_pos, rotation=(1.1, 0, 0.8))
           bpy.context.scene.camera = bpy.context.object
 
-          # Render Settings
+          # Render
           bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
-          bpy.context.scene.render.ffmpeg.format = 'MPEG4'
-          bpy.context.scene.render.filepath = 'ai_movie.mp4'
-          bpy.context.scene.frame_end = 100
+          bpy.context.scene.render.filepath = 'ai_story_video.mp4'
           bpy.ops.render.render(animation=True)
           EOF
           blender -b -P director.py
-      - name: Upload Movie
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Finished-Animation
-          path: ai_movie.mp4
+          name: Story-Based-Cartoon
+          path: ai_story_video.mp4
