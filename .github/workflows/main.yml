@@ -1,89 +1,147 @@
-name: 3D Pro Movie Pipeline
+name: 3D AI Director Pipeline
 on:
   workflow_dispatch:
     inputs:
       prompt:
-        description: 'Describe your scene'
-        default: 'Metallic character in cinematic blue lighting'
+        description: 'Describe the cartoon scene'
+        default: 'A happy monkey jumping in a colorful park with blue sky'
 
 jobs:
-  render_movie:
+  direct_and_render:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install Blender & Graphics Drivers
-        run: |
+      - name: Setup Blender
+        run: | # Install dependencies for Blender
           sudo apt-get update
           sudo apt-get install -y blender ffmpeg libegl1 libgles2 libdbus-1-3
-      - name: AI Movie Engine
+      - name: AI Smart Cartoon Logic
         run: |
+          export PROMPT="{{ github.event.inputs.prompt }}"
+          echo "Processing prompt: $PROMPT"
+
           cat << 'EOF' > director.py
-          import bpy
-          import math
+import bpy
+import os
+import math
+import random
 
-          # Reset scene
-          bpy.ops.wm.read_factory_settings()
-          bpy.ops.object.select_all(action='SELECT')
-          bpy.ops.object.delete()
+prompt = os.environ.get('PROMPT', '').lower()
 
-          # 1. Environment & Lighting
-          bpy.context.scene.world.use_nodes = True
-          bg = bpy.context.scene.world.node_tree.nodes['Background']
-          bg.inputs[0].default_value = (0.02, 0.02, 0.05, 1)
+# --- AI CARTOON GENERATION LOGIC ---
+bpy.ops.wm.read_factory_settings()
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete()
 
-          bpy.ops.object.light_add(type='AREA', location=(5, -5, 10))
-          lamp = bpy.context.object
-          lamp.data.energy = 5000
-          lamp.data.color = (0.2, 0.5, 1) # Cinematic Teal
+# 1. World/Background Setup - Clearer, brighter background
+bpy.context.scene.world.use_nodes = True
+bg = bpy.context.scene.world.node_tree.nodes['Background']
 
-          # 2. The Hero Character
-          bpy.ops.mesh.primitive_monkey_add(location=(0, 0, 1))
-          monkey = bpy.context.object
-          mat = bpy.data.materials.new(name="HeroMat")
-          mat.use_nodes = True
-          nodes = mat.node_tree.nodes
-          bsdf = nodes.get("Principled BSDF")
-          bsdf.inputs['Base Color'].default_value = (1, 0.8, 0.1, 1) # Gold
-          bsdf.inputs['Metallic'].default_value = 1.0
-          bsdf.inputs['Roughness'].default_value = 0.2
-          monkey.data.materials.append(mat)
+if 'blue sky' in prompt or 'neeli' in prompt:
+    bg.inputs[0].default_value = (0.3, 0.5, 1.0, 1) # Bright Blue Sky
+elif 'red room' in prompt or 'shuh' in prompt:
+    bg.inputs[0].default_value = (1.0, 0.2, 0.2, 1) # Reddish
+else:
+    bg.inputs[0].default_value = (0.7, 0.9, 1.0, 1) # Default light blue
 
-          # 3. Cinematic Camera Movement (Panning)
-          bpy.ops.object.camera_add(location=(10, -10, 5))
-          cam = bpy.context.object
-          bpy.context.scene.camera = cam
-          
-          # Look at constraints
-          empty = bpy.data.objects.new("Empty", None)
-          bpy.context.collection.objects.link(empty)
-          empty.location = (0, 0, 1)
-          constr = cam.constraints.new(type='TRACK_TO')
-          constr.target = empty
+# 2. Ground Plane - Colorful
+bpy.ops.mesh.primitive_plane_add(size=20, location=(0, 0, 0))
+floor = bpy.context.object
+floor_mat = bpy.data.materials.new(name="Cartoon_Floor_Mat")
+floor_mat.use_nodes = True
+floor_nodes = floor_mat.node_tree.nodes
+floor_bsdf = floor_nodes.get("Principled BSDF")
+floor_bsdf.inputs['Base Color'].default_value = (0.2, 0.8, 0.2, 1) # Green Grass
+floor.data.materials.append(floor_mat)
 
-          # Animate Camera
-          cam.keyframe_insert(data_path="location", frame=1)
-          cam.location = (5, -12, 8)
-          cam.keyframe_insert(data_path="location", frame=120)
+# 3. Character Creation (Monkey) - More Expressive
+bpy.ops.mesh.primitive_monkey_add(location=(0, 0, 1.5))
+monkey = bpy.context.object
+monkey.scale = (1.2, 1.2, 1.2) # Slightly larger
 
-          # 4. Character Animation
-          monkey.rotation_euler[2] = 0
-          monkey.keyframe_insert(data_path="rotation_euler", frame=1)
-          monkey.rotation_euler[2] = math.radians(360)
-          monkey.keyframe_insert(data_path="rotation_euler", frame=120)
+monkey_mat = bpy.data.materials.new(name="Cartoon_Monkey_Mat")
+monkey_mat.use_nodes = True
+monkey_nodes = monkey_mat.node_tree.nodes
+monkey_bsdf = monkey_nodes.get("Principled BSDF")
+monkey_bsdf.inputs['Base Color'].default_value = (0.8, 0.5, 0.2, 1) # Brownish-Orange Monkey
+monkey.data.materials.append(monkey_mat)
 
-          # 5. High-Quality Render Settings
-          scene = bpy.context.scene
-          scene.render.image_settings.file_format = 'FFMPEG'
-          scene.render.ffmpeg.format = 'MPEG4'
-          scene.render.ffmpeg.constant_rate_factor = 'HIGH'
-          scene.render.filepath = 'final_movie.mp4'
-          scene.frame_end = 120
-          bpy.ops.render.render(animation=True)
-          EOF
+# 4. Dynamic Monkey Animation (Jumping/Hopping)
+monkey.animation_data_create()
+monkey.animation_data.action = bpy.data.actions.new(name="Monkey_Jump_Cycle")
+
+frame_count = 120 # Longer animation
+for frame in range(1, frame_count + 1):
+    bpy.context.scene.frame_set(frame)
+    # Hopping/Jumping animation
+    z_offset = abs(math.sin(frame * 0.2)) * 0.8 # Jump up and down
+    x_offset = math.sin(frame * 0.05) * 0.5 # Slight side movement
+    monkey.location.z = 1.5 + z_offset
+    monkey.location.x = x_offset
+    monkey.rotation_euler[2] = frame * 0.1 # Continuous rotation
+    monkey.keyframe_insert(data_path="location", index=-1)
+    monkey.keyframe_insert(data_path="rotation_euler", index=2)
+
+# 5. Add Simple Environment Elements (Trees/Props) - Cylinders and spheres
+for i in range(5):
+    x = random.uniform(-8, 8)
+    y = random.uniform(-8, 8)
+    bpy.ops.mesh.primitive_cylinder_add(location=(x, y, 0.5), radius=0.3, depth=1.5)
+    tree_trunk = bpy.context.object
+    trunk_mat = bpy.data.materials.new(name="TreeTrunk_" + str(i)) # Fixed: use concatenation
+    trunk_mat.diffuse_color = (0.4, 0.2, 0.1, 1) # Brown
+    tree_trunk.data.materials.append(trunk_mat)
+
+    bpy.ops.mesh.primitive_uvsphere_add(location=(x, y, 2.0), radius=1.0, segments=16, ring_count=8)
+    tree_top = bpy.context.object
+    top_mat = bpy.data.materials.new(name="TreeTop_" + str(i)) # Fixed: use concatenation
+    top_mat.diffuse_color = (0.1, 0.7, 0.1, 1) # Green
+    tree_top.data.materials.append(top_mat)
+
+# 6. Lighting - Brighter, more even lighting for cartoon feel
+bpy.ops.object.light_add(type='SUN', location=(10, -10, 10))
+sun_light = bpy.context.object
+sun_light.data.energy = 5.0 # Brighter sun
+sun_light.data.shadow_soft_size = 0.5 # Softer shadows
+
+bpy.ops.object.light_add(type='AREA', location=(-5, 5, 8))
+fill_light = bpy.context.object
+fill_light.data.energy = 1000 # Fill light for even illumination
+
+# 7. Camera Placement & Animation - Orbiting Camera
+bpy.ops.object.camera_add(location=(10, -10, 8), rotation=(1.1, 0, 0.78))
+cam = bpy.context.object
+bpy.context.scene.camera = cam
+
+cam_radius = 12
+cam_height = 5
+for frame in range(1, frame_count + 1):
+    bpy.context.scene.frame_set(frame)
+    angle = (frame / frame_count) * 2 * math.pi # Full orbit
+    cam.location.x = cam_radius * math.cos(angle)
+    cam.location.y = cam_radius * math.sin(angle)
+    cam.location.z = cam_height + math.sin(frame * 0.05) * 1.0 # Slight vertical bob
+    
+    # Point camera at monkey
+    look_at_vector = monkey.location - cam.location
+    quat = look_at_vector.to_track_quat('-Z', 'Y')
+    cam.rotation_euler = quat.to_euler()
+    
+    cam.keyframe_insert(data_path="location")
+    cam.keyframe_insert(data_path="rotation_euler")
+
+# 8. Render Settings
+bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+bpy.context.scene.render.filepath = 'ai_cartoon_video.mp4'
+bpy.context.scene.frame_end = frame_count
+bpy.context.scene.render.fps = 24 # Standard frame rate
+bpy.ops.render.render(animation=True)
+EOF
           blender -b -P director.py
-      - name: Upload Movie
+      - name: Upload Cartoon Video
         uses: actions/upload-artifact@v4
         with:
-          name: Cinematic-3D-Movie
-          path: final_movie.mp4
+          name: Final-AI-Cartoon-Video
+          path: ai_cartoon_video.mp4
